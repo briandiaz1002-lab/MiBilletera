@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1b5e20">
+    <meta name="description" content="Mi Billetera - Gestión familiar con Angy y Brian">
+    <title>Mi Billetera</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --accent: #ff6f00;
+            --bg: #f1f3f4;
+            --card: #ffffff;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+            --danger: #d32f2f;
+            --warning: #f57c00;
+            --success: #388e3c;
+            --radius: 14px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 20px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .header h1 { font-size: 1.2rem; font-weight: 700; }
+        .header-sub { font-size: 0.7rem; opacity: 0.9; }
+        .user-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .user-selector select {
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            outline: none;
+        }
+        .user-selector select option { background: var(--primary); }
+
+        .page { display: none; padding: 12px 14px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.25s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+
+        .badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .badge-warning { background: #fff3e0; color: var(--accent); }
+        .badge-danger { background: #ffebee; color: var(--danger); }
+
+        .btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-block { display: block; width: 100%; justify-content: center; margin-top: 8px; }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .item-info { flex:1; min-width:0; }
+        .item-title { font-weight:600; font-size:0.85rem; }
+        .item-sub { font-size:0.7rem; color: var(--text-secondary); }
+
+        .input, .select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            background: #fafafa;
+            font-family: inherit;
+        }
+        .input:focus, .select:focus, textarea:focus { border-color: var(--primary); outline: none; background: white; }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            background: #eee;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab.active { background: var(--primary); color: white; }
+
+        .modal-overlay {
+            position: fixed; inset:0; background: rgba(0,0,0,0.5); z-index:200;
+            display:none; align-items: flex-end; justify-content: center;
+        }
+        .modal-overlay.show { display:flex; }
+        .modal {
+            background: white; border-radius: 20px 20px 0 0; padding: 16px;
+            width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto;
+        }
+        .modal-handle { width:40px; height:4px; background:#ccc; border-radius:4px; margin:0 auto 12px; }
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 10px 20px; border-radius: 20px;
+            z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        .macro-value { font-weight: 800; font-size: 1.2rem; }
+        .macro-label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary-light); transition: width 0.5s; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div>
+            <h1>🏦 Mi Billetera</h1>
+            <div class="header-sub" id="fechaActual"></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div class="user-selector">
+                <span>👤</span>
+                <select id="selectorUsuario" onchange="cambiarUsuario(this.value)">
+                    <option value="angy">Angy</option>
+                    <option value="brian">Brian</option>
+                </select>
+            </div>
+            <span id="badgeOffline" style="display:none; background:white; color:var(--primary); padding:4px 10px; border-radius:12px; font-size:0.7rem;">📴</span>
+        </div>
+    </header>
+
+    <div id="app">
+        <!-- Dashboard Principal -->
+        <div class="page active" id="page-dashboard">
+            <div class="card">
+                <div class="card-title">💰 Dinero Disponible (Global)</div>
+                <div id="dashDinero" style="font-size:1.5rem; font-weight:700;"></div>
+                <small id="dashDetalleDinero"></small>
+            </div>
+            <div class="card">
+                <div class="card-title">🔥 Metas Calóricas</div>
+                <div id="dashMetas"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">⚠️ Inventario Bajo</div>
+                <div id="dashStockBajo">✅ Todo en orden</div>
+            </div>
+            <div class="card">
+                <div class="card-title">📅 Próximos Pagos</div>
+                <div id="dashPagos">No hay pagos pendientes</div>
+            </div>
+            <div class="grid-2" style="margin-top:8px;">
+                <button class="btn btn-primary btn-block" onclick="navegar('inventario')">📦 Inventario</button>
+                <button class="btn btn-primary btn-block" onclick="navegar('finanzas')">💰 Finanzas</button>
+                <button class="btn btn-primary btn-block" onclick="navegar('nutricion')">🥗 Nutrición</button>
+                <button class="btn btn-primary btn-block" onclick="navegar('lista')">🛒 Compra</button>
+            </div>
+        </div>
+
+        <!-- Inventario -->
+        <div class="page" id="page-inventario">
+            <button class="btn btn-sm btn-outline" onclick="navegar('dashboard')">⬅ Volver</button>
+            <div class="tabs" id="tabsInventario">
+                <button class="tab active" data-tab="dashboard">⚠️ Bajo Stock</button>
+                <button class="tab" data-tab="alimentos">🍎 Alimentos</button>
+                <button class="tab" data-tab="limpieza">🧹 Limpieza</button>
+                <button class="tab" data-tab="perfumeria">🧴 Perfumería</button>
+                <button class="tab" data-tab="varios">📌 Varios</button>
+            </div>
+            <div id="inventario-contenido"></div>
+            <button class="btn btn-primary btn-block" onclick="abrirModalProducto()">＋ Nuevo producto</button>
+        </div>
+
+        <!-- Finanzas (completa) -->
+        <div class="page" id="page-finanzas">
+            <button class="btn btn-sm btn-outline" onclick="navegar('dashboard')">⬅ Volver</button>
+            <div class="tabs" id="tabsFinanzas">
+                <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+                <button class="tab" data-tab="ingresos">💰 Ingresos</button>
+                <button class="tab" data-tab="pagos">📆 Pagos</button>
+                <button class="tab" data-tab="presupuesto">🎯 Presupuesto</button>
+                <button class="tab" data-tab="personal">👥 Personal</button>
+                <button class="tab" data-tab="historial">📜 Historial</button>
+            </div>
+            <div id="finanzas-contenido"></div>
+        </div>
+
+        <!-- Nutrición (mejorada) -->
+        <div class="page" id="page-nutricion">
+            <button class="btn btn-sm btn-outline" onclick="navegar('dashboard')">⬅ Volver</button>
+            <div class="tabs" id="tabsNutricion">
+                <button class="tab active" data-tab="diario">📊 Diario</button>
+                <button class="tab" data-tab="recetas">📖 Recetas</button>
+                <button class="tab" data-tab="plan">📅 Plan Semanal</button>
+            </div>
+            <div id="nutricion-contenido"></div>
+        </div>
+
+        <!-- Lista de Compra -->
+        <div class="page" id="page-lista">
+            <button class="btn btn-sm btn-outline" onclick="navegar('dashboard')">⬅ Volver</button>
+            <div class="tabs" id="tabsCompra">
+                <button class="tab active" data-tab="pendientes">📋 Pendientes</button>
+                <button class="tab" data-tab="presupuesto">💵 Presupuesto</button>
+            </div>
+            <div id="compra-contenido"></div>
+        </div>
+    </div>
+
+    <!-- Modal genérico -->
+    <div class="modal-overlay" id="modalGenerico">
+        <div class="modal" id="modalContenido"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== BASE DE DATOS ====================
+        const DB_NAME = 'MiBilleteraDB';
+        let db;
+        const USUARIOS = { angy: 'Angy', brian: 'Brian' };
+        let usuarioActivo = localStorage.getItem('usuarioActivo') || 'angy';
+        document.getElementById('selectorUsuario').value = usuarioActivo;
+
+        function cambiarUsuario(valor) {
+            usuarioActivo = valor;
+            localStorage.setItem('usuarioActivo', valor);
+            const paginaActiva = document.querySelector('.page.active').id.replace('page-', '');
+            navegar(paginaActiva);
+        }
+
+        function abrirDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, 8);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('productos')) {
+                        const store = db.createObjectStore('productos', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('categoria', 'categoria', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('comidas')) {
+                        const store = db.createObjectStore('comidas', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('usuario', 'usuario', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('recetas')) {
+                        const store = db.createObjectStore('recetas', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('usuario', 'usuario', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('listaCompra')) {
+                        db.createObjectStore('listaCompra', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('ingresos')) {
+                        const store = db.createObjectStore('ingresos', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('usuario', 'usuario', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('deudas')) {
+                        db.createObjectStore('deudas', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('planSemanal')) {
+                        const store = db.createObjectStore('planSemanal', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('usuario', 'usuario', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('gastos')) {
+                        const store = db.createObjectStore('gastos', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('usuario', 'usuario', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('config')) {
+                        db.createObjectStore('config', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('metas')) {
+                        db.createObjectStore('metas', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('presupuestoItems')) {
+                        db.createObjectStore('presupuestoItems', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+                req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+        function tx(store, mode='readonly') { return db.transaction(store, mode).objectStore(store); }
+        function promisify(req) { return new Promise((res, rej) => { req.onsuccess = ()=>res(req.result); req.onerror = ()=>rej(req.error); }); }
+
+        const toast = document.getElementById('toast');
+        function mostrarToast(msg, tipo='') {
+            toast.textContent = msg; toast.className = 'toast show ' + tipo;
+            clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+        function fechaHoy() { return new Date().toISOString().split('T')[0]; }
+        function abrirModalGenerico(contenidoHTML) {
+            document.getElementById('modalContenido').innerHTML = '<div class="modal-handle"></div>' + contenidoHTML;
+            document.getElementById('modalGenerico').classList.add('show');
+        }
+        function cerrarModalGenerico() { document.getElementById('modalGenerico').classList.remove('show'); }
+        document.getElementById('modalGenerico').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalGenerico();
+        });
+
+        function navegar(pagina) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-'+pagina).classList.add('active');
+            if (pagina === 'dashboard') actualizarDashboard();
+            else if (pagina === 'inventario') iniciarInventario();
+            else if (pagina === 'finanzas') iniciarFinanzas();
+            else if (pagina === 'nutricion') iniciarNutricion();
+            else if (pagina === 'lista') iniciarCompra();
+        }
+
+        // ==================== INICIALIZACIÓN ====================
+        async function init() {
+            await abrirDB();
+            const countProd = await promisify(tx('productos').count());
+            if (countProd === 0) {
+                const iniciales = [
+                    { nombre:'Arroz', categoria:'alimentos', cantidad:2, unidad:'lb', minimo:1, precioUnitario:1.2, calorias:130, proteinas:2.7, carbohidratos:28, grasas:0.3, portionSize:1 },
+                    { nombre:'Pollo', categoria:'alimentos', cantidad:1.5, unidad:'lb', minimo:0.5, precioUnitario:5.5, calorias:165, proteinas:31, carbohidratos:0, grasas:3.6, portionSize:1 },
+                    { nombre:'Detergente', categoria:'limpieza', cantidad:3, unidad:'ud', minimo:1, precioUnitario:2.0 },
+                    { nombre:'Shampoo', categoria:'perfumeria', cantidad:1, unidad:'ud', minimo:1, precioUnitario:3.5 },
+                ];
+                const st = tx('productos','readwrite');
+                for (let p of iniciales) st.add(p);
+                await new Promise(r => st.transaction.oncomplete = r);
+            }
+            const metasStore = tx('metas','readwrite');
+            if (!(await promisify(metasStore.get('angy')))) {
+                metasStore.put({ id:'angy', calorias: 2000 });
+                metasStore.put({ id:'brian', calorias: 2200 });
+                await new Promise(r => metasStore.transaction.oncomplete = r);
+            }
+            document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+            actualizarDashboard();
+            window.addEventListener('online', ()=> document.getElementById('badgeOffline').style.display='none');
+            window.addEventListener('offline', ()=> document.getElementById('badgeOffline').style.display='inline-block');
+            if (!navigator.onLine) document.getElementById('badgeOffline').style.display='inline-block';
+        }
+        document.addEventListener('DOMContentLoaded', init);
+
+        // ==================== DASHBOARD ====================
+        async function actualizarDashboard() {
+            const metaAngy = (await promisify(tx('metas').get('angy')))?.calorias || 2000;
+            const metaBrian = (await promisify(tx('metas').get('brian')))?.calorias || 2200;
+            document.getElementById('dashMetas').innerHTML = `
+                <div>👤 Angy: <strong>${metaAngy} kcal</strong></div>
+                <div>👤 Brian: <strong>${metaBrian} kcal</strong></div>
+                <div>🔥 Total: <strong>${metaAngy + metaBrian} kcal</strong></div>
+            `;
+
+            const todosIngresos = await promisify(tx('ingresos').getAll());
+            const todasDeudas = await promisify(tx('deudas').getAll());
+            const todosGastos = await promisify(tx('gastos').getAll());
+            const totalIngGlobal = todosIngresos.reduce((s,i)=>s+i.monto,0);
+            const totalDeuPend = todasDeudas.filter(d=>!d.pagado).reduce((s,d)=>s+d.monto,0);
+            const totalGastosGlobal = todosGastos.reduce((s,g)=>s+g.monto,0);
+            const dineroLibreGlobal = totalIngGlobal - totalDeuPend - totalGastosGlobal;
+            document.getElementById('dashDinero').textContent = '$'+dineroLibreGlobal.toFixed(2);
+            document.getElementById('dashDetalleDinero').textContent = `Ingresos totales: $${totalIngGlobal.toFixed(2)} · Deudas pend.: $${totalDeuPend.toFixed(2)} · Gastos: $${totalGastosGlobal.toFixed(2)}`;
+
+            const productos = await promisify(tx('productos').getAll());
+            const bajos = productos.filter(p=> p.minimo && p.cantidad <= p.minimo);
+            document.getElementById('dashStockBajo').innerHTML = bajos.length ? bajos.map(p=>`🔸 ${p.nombre} (${p.cantidad} ${p.unidad})`).join('<br>') : '✅ Todo en orden';
+
+            const pendientes = todasDeudas.filter(d=>!d.pagado);
+            document.getElementById('dashPagos').innerHTML = pendientes.length ? pendientes.map(d=>`📌 ${d.nombre}: $${d.monto.toFixed(2)}${d.fechaPago ? ' (pagado '+d.fechaPago+')' : ''}`).join('<br>') : 'Sin pagos pendientes';
+        }
+
+        // ==================== INVENTARIO (con porción ajustada) ====================
+        function iniciarInventario() {
+            cambiarTabInventario('dashboard');
+            document.querySelectorAll('#tabsInventario .tab').forEach(tab => {
+                tab.onclick = () => cambiarTabInventario(tab.dataset.tab);
+            });
+        }
+        async function cambiarTabInventario(tab) {
+            document.querySelectorAll('#tabsInventario .tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`#tabsInventario .tab[data-tab="${tab}"]`).classList.add('active');
+            const cont = document.getElementById('inventario-contenido');
+            if (tab === 'dashboard') {
+                const productos = await promisify(tx('productos').getAll());
+                const bajos = productos.filter(p=> p.minimo && p.cantidad <= p.minimo);
+                cont.innerHTML = bajos.length ? bajos.map(p=>`<div class="list-item"><span>🔸 ${p.nombre} (${p.cantidad} ${p.unidad})</span></div>`).join('') : '<p>✅ Todo en orden.</p>';
+            } else {
+                const productos = await promisify(tx('productos').getAll());
+                const filtrados = productos.filter(p=>p.categoria===tab);
+                cont.innerHTML = filtrados.length ? filtrados.map(p=>`
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-title">${p.nombre} <span class="badge">${p.categoria}</span></div>
+                            <div class="item-sub">Stock: ${p.cantidad} ${p.unidad||''} (mín: ${p.minimo||0})${p.categoria==='alimentos' && p.portionSize ? ' · Porción: '+p.portionSize+' '+p.unidad : ''}</div>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn btn-sm btn-outline" onclick="editarProducto(${p.id})">✏️</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarProducto(${p.id})">🗑️</button>
+                        </div>
+                    </div>`).join('') : '<p>No hay productos en esta categoría.</p>';
+            }
+        }
+
+        function abrirModalProducto() {
+            abrirModalGenerico(`
+                <h3>Nuevo producto</h3>
+                <input class="input" id="prodNombre" placeholder="Nombre del producto"><br><br>
+                <select class="select" id="prodCategoria">
+                    <option value="alimentos">Alimento</option>
+                    <option value="limpieza">Limpieza</option>
+                    <option value="perfumeria">Perfumería</option>
+                    <option value="varios">Varios</option>
+                </select><br><br>
+                <input class="input" id="prodUnidad" placeholder="Unidad de medida (lb, g, ml, ud)"><br><br>
+                <input class="input" id="prodCantidad" type="number" placeholder="Cantidad actual" step="0.1"><br><br>
+                <input class="input" id="prodMinimo" type="number" placeholder="Stock mínimo"><br><br>
+                <input class="input" id="prodPrecio" type="number" placeholder="Precio unitario" step="0.01"><br><br>
+                <div id="nutriFields" style="display:block;">
+                    <input class="input" id="prodTamanoPorcion" placeholder="Tamaño de porción (ej. 15ml, 100g)"><br><br>
+                    <div class="grid-2">
+                        <input class="input" id="prodCalorias" type="number" placeholder="Calorías por porción" step="0.1">
+                        <input class="input" id="prodProteinas" type="number" placeholder="Proteínas (g)" step="0.1">
+                    </div>
+                    <div class="grid-2">
+                        <input class="input" id="prodCarbohidratos" type="number" placeholder="Carbohidratos (g)" step="0.1">
+                        <input class="input" id="prodGrasas" type="number" placeholder="Grasas (g)" step="0.1">
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="guardarProductoDesdeModal()">Guardar</button>
+            `);
+            document.getElementById('prodCategoria').addEventListener('change', function() {
+                document.getElementById('nutriFields').style.display = this.value==='alimentos' ? 'block' : 'none';
+            });
+            document.getElementById('nutriFields').style.display = 'block';
+        }
+
+        async function editarProducto(id) {
+            const p = await promisify(tx('productos').get(id));
+            if(!p) return;
+            abrirModalGenerico(`
+                <h3>Editar producto</h3>
+                <input class="input" id="prodNombre" value="${p.nombre}"><br><br>
+                <select class="select" id="prodCategoria">
+                    <option value="alimentos" ${p.categoria==='alimentos'?'selected':''}>Alimento</option>
+                    <option value="limpieza" ${p.categoria==='limpieza'?'selected':''}>Limpieza</option>
+                    <option value="perfumeria" ${p.categoria==='perfumeria'?'selected':''}>Perfumería</option>
+                    <option value="varios" ${p.categoria==='varios'?'selected':''}>Varios</option>
+                </select><br><br>
+                <input class="input" id="prodUnidad" value="${p.unidad||''}" placeholder="Unidad"><br><br>
+                <input class="input" id="prodCantidad" type="number" value="${p.cantidad}" step="0.1"><br><br>
+                <input class="input" id="prodMinimo" type="number" value="${p.minimo||0}"><br><br>
+                <input class="input" id="prodPrecio" type="number" value="${p.precioUnitario||0}" step="0.01"><br><br>
+                <div id="nutriFields" style="display:${p.categoria==='alimentos'?'block':'none'};">
+                    <input class="input" id="prodTamanoPorcion" value="${p.portionSize||''}" placeholder="Tamaño de porción"><br><br>
+                    <div class="grid-2">
+                        <input class="input" id="prodCalorias" type="number" value="${p.calorias||0}" step="0.1">
+                        <input class="input" id="prodProteinas" type="number" value="${p.proteinas||0}" step="0.1">
+                    </div>
+                    <div class="grid-2">
+                        <input class="input" id="prodCarbohidratos" type="number" value="${p.carbohidratos||0}" step="0.1">
+                        <input class="input" id="prodGrasas" type="number" value="${p.grasas||0}" step="0.1">
+                    </div>
+                </div>
+                <input type="hidden" id="prodId" value="${p.id}">
+                <button class="btn btn-primary btn-block" onclick="guardarProductoDesdeModal()">Guardar cambios</button>
+            `);
+            document.getElementById('prodCategoria').addEventListener('change', function() {
+                document.getElementById('nutriFields').style.display = this.value==='alimentos' ? 'block' : 'none';
+            });
+        }
+
+        async function guardarProductoDesdeModal() {
+            const id = document.getElementById('prodId')?.value;
+            const prod = {
+                nombre: document.getElementById('prodNombre').value,
+                categoria: document.getElementById('prodCategoria').value,
+                unidad: document.getElementById('prodUnidad').value,
+                cantidad: parseFloat(document.getElementById('prodCantidad').value)||0,
+                minimo: parseFloat(document.getElementById('prodMinimo').value)||0,
+                precioUnitario: parseFloat(document.getElementById('prodPrecio').value)||0,
+            };
+            if (prod.categoria === 'alimentos') {
+                prod.portionSize = parseFloat(document.getElementById('prodTamanoPorcion').value)||0;
+                prod.calorias = parseFloat(document.getElementById('prodCalorias').value)||0;
+                prod.proteinas = parseFloat(document.getElementById('prodProteinas').value)||0;
+                prod.carbohidratos = parseFloat(document.getElementById('prodCarbohidratos').value)||0;
+                prod.grasas = parseFloat(document.getElementById('prodGrasas').value)||0;
+            }
+            const st = tx('productos','readwrite');
+            if (id) { prod.id = parseInt(id); st.put(prod); }
+            else st.add(prod);
+            await new Promise(r => st.transaction.oncomplete = r);
+            cerrarModalGenerico();
+            mostrarToast('Producto guardado ✅');
+            cambiarTabInventario(document.querySelector('#tabsInventario .tab.active').dataset.tab);
+        }
+        async function eliminarProducto(id) {
+            if (!confirm('¿Eliminar producto?')) return;
+            await promisify(tx('productos','readwrite').delete(id));
+            cambiarTabInventario(document.querySelector('#tabsInventario .tab.active').dataset.tab);
+            mostrarToast('Eliminado');
+        }
+
+        // ==================== FINANZAS (sin cambios) ====================
+        function iniciarFinanzas() {
+            cambiarTabFinanzas('dashboard');
+            document.querySelectorAll('#tabsFinanzas .tab').forEach(tab => {
+                tab.onclick = () => cambiarTabFinanzas(tab.dataset.tab);
+            });
+        }
+        async function cambiarTabFinanzas(tab) {
+            document.querySelectorAll('#tabsFinanzas .tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`#tabsFinanzas .tab[data-tab="${tab}"]`).classList.add('active');
+            const cont = document.getElementById('finanzas-contenido');
+            if (tab === 'dashboard') {
+                const todosIngresos = await promisify(tx('ingresos').getAll());
+                const todasDeudas = await promisify(tx('deudas').getAll());
+                const todosGastos = await promisify(tx('gastos').getAll());
+                const totalIng = todosIngresos.reduce((s,i)=>s+i.monto,0);
+                const totalDeuPend = todasDeudas.filter(d=>!d.pagado).reduce((s,d)=>s+d.monto,0);
+                const totalGastos = todosGastos.reduce((s,g)=>s+g.monto,0);
+                const presupuestoItems = await promisify(tx('presupuestoItems').getAll());
+                const totalPresupuestado = presupuestoItems.reduce((s,p)=>s+p.total,0);
+                const gastosNoPresupuestados = todosGastos.filter(g=>!g.presupuestado).reduce((s,g)=>s+g.monto,0);
+                const dineroLibre = totalIng - totalDeuPend - totalGastos;
+                cont.innerHTML = `
+                    <div class="card"><h3>💵 Dinero Disponible</h3><h2>$${dineroLibre.toFixed(2)}</h2></div>
+                    <div class="card"><h3>📈 Ingresos Totales</h3><h2>$${totalIng.toFixed(2)}</h2></div>
+                    <div class="card"><h3>📋 Total Presupuestado</h3><h2>$${totalPresupuestado.toFixed(2)}</h2></div>
+                    <div class="card"><h3>💸 Gastos No Presupuestados</h3><h2>$${gastosNoPresupuestados.toFixed(2)}</h2></div>
+                `;
+            } else if (tab === 'ingresos') {
+                const ingresos = await promisify(tx('ingresos').getAll());
+                cont.innerHTML = `
+                    <button class="btn btn-primary btn-block" onclick="mostrarModalIngreso()">＋ Añadir ingreso</button>
+                    ${ingresos.length ? ingresos.map(i=>`
+                        <div class="list-item">
+                            <span>${i.concepto} (${i.fecha}) - ${USUARIOS[i.usuario]||i.usuario}</span>
+                            <span>$${i.monto.toFixed(2)}</span>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarIngreso(${i.id})">🗑️</button>
+                        </div>`).join('') : '<p>Sin ingresos.</p>'}
+                `;
+            } else if (tab === 'pagos') {
+                const deudas = await promisify(tx('deudas').getAll());
+                cont.innerHTML = `
+                    <button class="btn btn-primary btn-block" onclick="mostrarModalDeuda()">＋ Nueva deuda</button>
+                    ${deudas.length ? deudas.map(d=>`
+                        <div class="list-item">
+                            <div class="item-info">
+                                <div class="item-title">${d.nombre} ${d.pagado?'✅':''}</div>
+                                <div class="item-sub">$${d.monto.toFixed(2)} · ${d.mes||''}${d.fechaPago ? ' · Pagado: '+d.fechaPago : ''}</div>
+                            </div>
+                            <button class="btn btn-sm ${d.pagado?'btn-outline':'btn-primary'}" onclick="pagarDeuda(${d.id})">${d.pagado?'↩️ Revertir':'✅ Pagar'}</button>
+                        </div>`).join('') : '<p>No hay deudas registradas.</p>'}
+                `;
+            } else if (tab === 'presupuesto') {
+                const items = await promisify(tx('presupuestoItems').getAll());
+                const totalPres = items.reduce((s,i)=>s+i.total,0);
+                cont.innerHTML = `
+                    <button class="btn btn-primary btn-block" onclick="agregarAlPresupuesto()">＋ Nuevo rubro presupuestado</button>
+                    <div class="card"><h3>Total presupuestado: $${totalPres.toFixed(2)}</h3></div>
+                    ${items.map(p=>`
+                        <div class="list-item">
+                            <span>${p.categoria}: ${p.nombre} (${p.cantidad} ${p.unidad} x $${p.unitPrice})</span>
+                            <span>$${p.total.toFixed(2)}</span>
+                        </div>`).join('') || '<p>Sin presupuesto.</p>'}
+                `;
+            } else if (tab === 'personal') {
+                const ingAngy = (await promisify(tx('ingresos').getAll())).filter(i=>i.usuario==='angy').reduce((s,i)=>s+i.monto,0);
+                const ingBrian = (await promisify(tx('ingresos').getAll())).filter(i=>i.usuario==='brian').reduce((s,i)=>s+i.monto,0);
+                const gasAngy = (await promisify(tx('gastos').getAll())).filter(g=>g.usuario==='angy').reduce((s,g)=>s+g.monto,0);
+                const gasBrian = (await promisify(tx('gastos').getAll())).filter(g=>g.usuario==='brian').reduce((s,g)=>s+g.monto,0);
+                const presAngy = (await promisify(tx('presupuestoItems').getAll())).filter(p=>p.usuario==='angy').reduce((s,p)=>s+p.total,0);
+                const presBrian = (await promisify(tx('presupuestoItems').getAll())).filter(p=>p.usuario==='brian').reduce((s,p)=>s+p.total,0);
+                cont.innerHTML = `
+                    <div class="card">
+                        <h3>👤 Angy</h3>
+                        <p>Ingresos: $${ingAngy.toFixed(2)}</p>
+                        <p>Gastos personales: $${gasAngy.toFixed(2)}</p>
+                        <p>Presupuesto asignado: $${presAngy.toFixed(2)}</p>
+                        <p><strong>Disponible: $${(ingAngy - gasAngy).toFixed(2)}</strong></p>
+                    </div>
+                    <div class="card">
+                        <h3>👤 Brian</h3>
+                        <p>Ingresos: $${ingBrian.toFixed(2)}</p>
+                        <p>Gastos personales: $${gasBrian.toFixed(2)}</p>
+                        <p>Presupuesto asignado: $${presBrian.toFixed(2)}</p>
+                        <p><strong>Disponible: $${(ingBrian - gasBrian).toFixed(2)}</strong></p>
+                    </div>
+                `;
+            } else if (tab === 'historial') {
+                const ingresos = await promisify(tx('ingresos').getAll());
+                const gastos = await promisify(tx('gastos').getAll());
+                let movimientos = [
+                    ...ingresos.map(i=>({ tipo:'Ingreso', descripcion:i.concepto, monto:i.monto, fecha:i.fecha, usuario:i.usuario })),
+                    ...gastos.map(g=>({ tipo:'Gasto', descripcion:g.nombre, monto:g.monto, fecha:g.fecha, usuario:g.usuario, presupuestado:g.presupuestado }))
+                ];
+                movimientos.sort((a,b)=> (b.fecha||'').localeCompare(a.fecha||''));
+                cont.innerHTML = movimientos.slice(0,50).map(m=>`
+                    <div class="list-item">
+                        <span>${m.fecha} - ${m.tipo}: ${m.descripcion}</span>
+                        <span style="color:${m.tipo==='Ingreso'?'green':'red'}">$${m.monto.toFixed(2)}</span>
+                        <small>(${USUARIOS[m.usuario]||m.usuario}${m.presupuestado?' · Presup.':''})</small>
+                    </div>`).join('') || '<p>Sin movimientos.</p>';
+            }
+        }
+
+        function mostrarModalIngreso() {
+            abrirModalGenerico(`
+                <h3>Nuevo ingreso</h3>
+                <input class="input" id="ingresoConcepto" placeholder="Concepto"><br><br>
+                <input class="input" id="ingresoMonto" type="number" placeholder="Monto" step="0.01"><br><br>
+                <select class="select" id="ingresoUsuario">
+                    <option value="angy">Angy</option>
+                    <option value="brian">Brian</option>
+                </select><br><br>
+                <button class="btn btn-primary btn-block" onclick="guardarIngresoDesdeModal()">Guardar</button>
+            `);
+        }
+        async function guardarIngresoDesdeModal() {
+            const concepto = document.getElementById('ingresoConcepto').value;
+            const monto = parseFloat(document.getElementById('ingresoMonto').value);
+            const usuario = document.getElementById('ingresoUsuario').value;
+            if (!concepto || isNaN(monto)) { mostrarToast('Completa los campos', 'error'); return; }
+            await promisify(tx('ingresos','readwrite').add({ concepto, monto, fecha: fechaHoy(), usuario }));
+            cerrarModalGenerico();
+            cambiarTabFinanzas('ingresos');
+            mostrarToast('Ingreso añadido');
+        }
+        async function eliminarIngreso(id) {
+            await promisify(tx('ingresos','readwrite').delete(id));
+            cambiarTabFinanzas('ingresos');
+        }
+
+        function mostrarModalDeuda() {
+            abrirModalGenerico(`
+                <h3>Nueva deuda</h3>
+                <input class="input" id="deudaNombre" placeholder="Nombre (ej: Agua)"><br><br>
+                <input class="input" id="deudaMonto" type="number" placeholder="Monto" step="0.01"><br><br>
+                <input class="input" id="deudaMes" type="month" value="${new Date().toISOString().slice(0,7)}"><br><br>
+                <button class="btn btn-primary btn-block" onclick="guardarDeudaDesdeModal()">Guardar</button>
+            `);
+        }
+        async function guardarDeudaDesdeModal() {
+            const nombre = document.getElementById('deudaNombre').value;
+            const monto = parseFloat(document.getElementById('deudaMonto').value);
+            const mes = document.getElementById('deudaMes').value;
+            if (!nombre || isNaN(monto)) { mostrarToast('Completa los campos', 'error'); return; }
+            await promisify(tx('deudas','readwrite').add({ nombre, monto, pagado:false, mes, recurrente:true }));
+            cerrarModalGenerico();
+            cambiarTabFinanzas('pagos');
+            mostrarToast('Deuda añadida');
+        }
+        async function pagarDeuda(id) {
+            const deuda = await promisify(tx('deudas').get(id));
+            if (!deuda) return;
+            if (deuda.pagado) {
+                deuda.pagado = false;
+                deuda.fechaPago = null;
+                await promisify(tx('deudas','readwrite').put(deuda));
+                cambiarTabFinanzas('pagos');
+            } else {
+                abrirModalGenerico(`
+                    <h3>Pagar "${deuda.nombre}"</h3>
+                    <p>Monto: $${deuda.monto.toFixed(2)}</p>
+                    <input class="input" id="pagoFecha" type="date" value="${fechaHoy()}"><br><br>
+                    <button class="btn btn-primary btn-block" onclick="confirmarPagoDeuda(${id})">Confirmar pago</button>
+                `);
+            }
+        }
+        async function confirmarPagoDeuda(id) {
+            const fechaPago = document.getElementById('pagoFecha').value;
+            const deuda = await promisify(tx('deudas').get(id));
+            deuda.pagado = true;
+            deuda.fechaPago = fechaPago;
+            await promisify(tx('deudas','readwrite').put(deuda));
+            cerrarModalGenerico();
+            cambiarTabFinanzas('pagos');
+            mostrarToast('Deuda pagada ✅');
+        }
+
+        async function agregarAlPresupuesto() {
+            abrirModalGenerico(`
+                <h3>Nuevo rubro presupuestado</h3>
+                <select class="select" id="presCat">
+                    <option value="alimentos">Alimentos</option>
+                    <option value="limpieza">Limpieza</option>
+                    <option value="perfumeria">Perfumería</option>
+                    <option value="varios">Varios</option>
+                    <option value="cuentas">Cuentas de la casa</option>
+                </select><br><br>
+                <input class="input" id="presNombre" placeholder="Producto/servicio"><br><br>
+                <input class="input" id="presUnidad" placeholder="Unidad (lb, ud, etc.)"><br><br>
+                <input class="input" id="presCantidad" type="number" placeholder="Cantidad" step="0.1"><br><br>
+                <input class="input" id="presPrecioUnitario" type="number" placeholder="Precio por unidad" step="0.01"><br><br>
+                <input class="input" id="presTotal" type="number" placeholder="Monto total (auto)" readonly><br><br>
+                <select class="select" id="presUrgencia">
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
+                </select><br><br>
+                <button class="btn btn-primary btn-block" onclick="guardarPresupuestoDesdeModal()">Guardar y enviar a lista</button>
+            `);
+            const updateTotal = () => {
+                const cant = parseFloat(document.getElementById('presCantidad').value)||0;
+                const precio = parseFloat(document.getElementById('presPrecioUnitario').value)||0;
+                document.getElementById('presTotal').value = (cant * precio).toFixed(2);
+            };
+            document.getElementById('presCantidad').addEventListener('input', updateTotal);
+            document.getElementById('presPrecioUnitario').addEventListener('input', updateTotal);
+        }
+        async function guardarPresupuestoDesdeModal() {
+            const categoria = document.getElementById('presCat').value;
+            const nombre = document.getElementById('presNombre').value;
+            const unidad = document.getElementById('presUnidad').value;
+            const cantidad = parseFloat(document.getElementById('presCantidad').value)||0;
+            const unitPrice = parseFloat(document.getElementById('presPrecioUnitario').value)||0;
+            const total = cantidad * unitPrice;
+            const urgencia = document.getElementById('presUrgencia').value;
+            if (!nombre || !unidad || cantidad<=0) { mostrarToast('Completa todos los campos', 'error'); return; }
+            const item = {
+                categoria, nombre, unidad, cantidad, unitPrice, total, urgencia, usuario: usuarioActivo
+            };
+            const presupuestoId = await promisify(tx('presupuestoItems','readwrite').add(item));
+            const listaItem = {
+                nombre, unidad, remaining: cantidad, unitPrice, urgencia, presupuestoId, usuario: usuarioActivo
+            };
+            await promisify(tx('listaCompra','readwrite').add(listaItem));
+            cerrarModalGenerico();
+            cambiarTabFinanzas('presupuesto');
+            mostrarToast('Agregado al presupuesto y lista de compra ✅');
+        }
+
+        // ==================== NUTRICIÓN (porciones ajustadas) ====================
+        function iniciarNutricion() {
+            cambiarTabNutricion('diario');
+            document.querySelectorAll('#tabsNutricion .tab').forEach(tab => {
+                tab.onclick = () => cambiarTabNutricion(tab.dataset.tab);
+            });
+        }
+        async function cambiarTabNutricion(tab) {
+            document.querySelectorAll('#tabsNutricion .tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`#tabsNutricion .tab[data-tab="${tab}"]`).classList.add('active');
+            const cont = document.getElementById('nutricion-contenido');
+            if (tab === 'diario') {
+                const meta = (await promisify(tx('metas').get(usuarioActivo)))?.calorias || 2000;
+                const comidas = (await promisify(tx('comidas').getAll())).filter(c => c.usuario === usuarioActivo && c.fecha === fechaHoy());
+                let cal=0, prot=0, carb=0, grasa=0;
+                comidas.forEach(c=>{ cal+=c.calorias||0; prot+=c.proteinas||0; carb+=c.carbohidratos||0; grasa+=c.grasas||0; });
+                const porcentaje = Math.min((cal/meta)*100, 100);
+                cont.innerHTML = `
+                    <div class="card">
+                        <div class="grid-4" style="text-align:center;">
+                            <div><span class="macro-value">${Math.round(cal)}</span><div class="macro-label">kcal</div></div>
+                            <div><span class="macro-value" style="color:#e91e63">${Math.round(prot)}g</span><div class="macro-label">Prot</div></div>
+                            <div><span class="macro-value" style="color:#ff9800">${Math.round(carb)}g</span><div class="macro-label">Carb</div></div>
+                            <div><span class="macro-value" style="color:#2196f3">${Math.round(grasa)}g</span><div class="macro-label">Grasa</div></div>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${porcentaje}%; background:${porcentaje>90?'var(--warning)':'var(--primary-light)'}"></div></div>
+                        <small>Meta diaria: <strong>${meta} kcal</strong> (${Math.round(porcentaje)}%)</small>
+                        <button class="btn btn-sm btn-outline" onclick="cambiarMetaCalorica()">⚙️ Cambiar meta</button>
+                        <button class="btn btn-sm btn-primary btn-block" onclick="registrarComida()">➕ Registrar comida (receta)</button>
+                    </div>
+                    <div class="card"><div class="card-title">🍽️ Comidas de Hoy</div>${comidas.length ? comidas.map(c=>`<div class="list-item"><div class="item-info"><div class="item-title">${c.alimentoNombre} (${c.recetaNombre||'comida simple'})</div><div class="item-sub">${Math.round(c.calorias)} kcal · ${c.cantidadServidas} porciones</div></div><button class="btn btn-sm btn-danger" onclick="eliminarComida(${c.id})">🗑️</button></div>`).join('') : '<p>No has registrado comidas hoy.</p>'}</div>`;
+            } else if (tab === 'recetas') {
+                const recetas = (await promisify(tx('recetas').getAll())).filter(r => r.usuario === usuarioActivo);
+                cont.innerHTML = `<button class="btn btn-primary btn-block" onclick="mostrarModalReceta()">＋ Nueva receta</button>` + (recetas.length ? recetas.map(r=>`<div class="list-item"><div class="item-info"><span>📖 ${r.nombre} (${r.porciones||1} porc.)</span><small>${Math.round(r.caloriasTotales||0)} kcal total</small></div><button class="btn btn-sm btn-primary" onclick="usarReceta(${r.id})">🍽️ Usar</button></div>`).join('') : '<p>No hay recetas. Crea una para registrar comidas.</p>');
+            } else if (tab === 'plan') {
+                const plan = (await promisify(tx('planSemanal').getAll())).filter(p => p.usuario === usuarioActivo);
+                cont.innerHTML = `<button class="btn btn-primary btn-block" onclick="mostrarModalPlanificar()">＋ Planificar comida</button>` + (plan.length ? plan.map(p=>`<div class="list-item"><div class="item-info"><span>📅 ${p.fecha} - ${p.comida}: ${p.recetaNombre||p.descripcion||'Sin receta'}</span></div><button onclick="eliminarPlan(${p.id})">🗑️</button></div>`).join('') : '<p>Sin plan semanal.</p>');
+            }
+        }
+
+        async function cambiarMetaCalorica() {
+            const metaActual = (await promisify(tx('metas').get(usuarioActivo)))?.calorias || 2000;
+            abrirModalGenerico(`<h3>Meta calórica diaria</h3><input class="input" id="nuevaMeta" type="number" value="${metaActual}" step="50"><br><br><button class="btn btn-primary btn-block" onclick="guardarMetaDesdeModal()">Guardar</button>`);
+        }
+        async function guardarMetaDesdeModal() {
+            const valor = parseInt(document.getElementById('nuevaMeta').value) || 2000;
+            await promisify(tx('metas','readwrite').put({ id: usuarioActivo, calorias: valor }));
+            cerrarModalGenerico();
+            cambiarTabNutricion('diario');
+            mostrarToast('Meta actualizada');
+        }
+
+        async function registrarComida() {
+            const recetas = (await promisify(tx('recetas').getAll())).filter(r => r.usuario === usuarioActivo);
+            if (recetas.length === 0) { mostrarToast('No hay recetas. Crea una primero.', 'error'); return; }
+            let opciones = recetas.map(r=>`<option value="${r.id}">${r.nombre} (${r.porciones} porc.)</option>`).join('');
+            abrirModalGenerico(`
+                <h3>Registrar comida (receta)</h3>
+                <select class="select" id="comidaRecetaId">${opciones}</select><br><br>
+                <input class="input" id="comidaPorciones" type="number" value="1" placeholder="Porciones consumidas" step="0.1"><br><br>
+                <button class="btn btn-primary btn-block" onclick="guardarComidaDesdeModal()">Registrar</button>
+            `);
+        }
+        async function guardarComidaDesdeModal() {
+            const recetaId = parseInt(document.getElementById('comidaRecetaId').value);
+            const porciones = parseFloat(document.getElementById('comidaPorciones').value);
+            if (isNaN(recetaId) || isNaN(porciones) || porciones<=0) return;
+            const receta = await promisify(tx('recetas').get(recetaId));
+            if (!receta) return;
+            const factor = porciones / receta.porciones;
+            const comida = {
+                fecha: fechaHoy(),
+                usuario: usuarioActivo,
+                recetaId: receta.id,
+                recetaNombre: receta.nombre,
+                alimentoNombre: receta.nombre,
+                cantidadServidas: porciones,
+                calorias: (receta.caloriasTotales||0) * factor,
+                proteinas: (receta.proteinasTotales||0) * factor,
+                carbohidratos: (receta.carbohidratosTotales||0) * factor,
+                grasas: (receta.grasasTotales||0) * factor
+            };
+            await promisify(tx('comidas','readwrite').add(comida));
+            cerrarModalGenerico();
+            cambiarTabNutricion('diario');
+            mostrarToast('Comida registrada ✅');
+        }
+        async function eliminarComida(id) { await promisify(tx('comidas','readwrite').delete(id)); cambiarTabNutricion('diario'); }
+
+        async function mostrarModalReceta() {
+            const productos = await promisify(tx('productos').getAll());
+            const alimentos = productos.filter(p=>p.categoria==='alimentos' && p.calorias);
+            if (alimentos.length === 0) { mostrarToast('No hay alimentos con datos nutricionales en el inventario.', 'error'); return; }
+            let opcionesAlimentos = alimentos.map(a=>{
+                let infoPorcion = '';
+                if (a.portionSize) {
+                    infoPorcion = ` (${a.portionSize}${a.unidad}, ${a.calorias}kcal/porción)`;
+                } else {
+                    infoPorcion = ` (${a.unidad}, ${a.calorias}kcal/${a.unidad})`;
+                }
+                return `<option value="${a.id}">${a.nombre}${infoPorcion}</option>`;
+            }).join('');
+            abrirModalGenerico(`
+                <h3>Nueva receta</h3>
+                <input class="input" id="recetaNombre" placeholder="Nombre de la receta"><br><br>
+                <input class="input" id="recetaPorciones" type="number" value="1" placeholder="Rinde (porciones)"><br><br>
+                <div id="ingredientesContainer"></div>
+                <button class="btn btn-sm btn-outline" onclick="agregarIngrediente()">＋ Añadir ingrediente</button>
+                <div id="resumenNutricional" style="margin:10px 0; padding:8px; background:#f9f9f9; border-radius:8px; font-size:0.8rem;"></div>
+                <button class="btn btn-primary btn-block" onclick="guardarRecetaDesdeModal()">Guardar receta</button>
+            `);
+            window.alimentosDisponibles = alimentos;
+            window.ingredientesReceta = [];
+            agregarIngrediente(); // Añadir un primer ingrediente automáticamente
+            actualizarResumenNutricional();
+        }
+        function agregarIngrediente() {
+            const div = document.createElement('div');
+            div.className = 'grid-2';
+            const opciones = window.alimentosDisponibles.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+            div.innerHTML = `
+                <select class="select ingAlimento">${opciones}</select>
+                <input class="input ingCantidad" type="number" placeholder="Nº porciones" step="0.1" value="1">
+            `;
+            div.querySelector('.ingAlimento').addEventListener('change', actualizarResumenNutricional);
+            div.querySelector('.ingCantidad').addEventListener('input', actualizarResumenNutricional);
+            document.getElementById('ingredientesContainer').appendChild(div);
+        }
+        function actualizarResumenNutricional() {
+            const selects = document.querySelectorAll('.ingAlimento');
+            const cantidades = document.querySelectorAll('.ingCantidad');
+            let totalCal=0, totalProt=0, totalCarb=0, totalGrasa=0;
+            const porciones = parseFloat(document.getElementById('recetaPorciones').value) || 1;
+            for (let i=0; i<selects.length; i++) {
+                const id = parseInt(selects[i].value);
+                const cant = parseFloat(cantidades[i].value); // número de porciones
+                if (!isNaN(id) && !isNaN(cant)) {
+                    const alim = window.alimentosDisponibles.find(a=>a.id===id);
+                    if (alim) {
+                        totalCal += (alim.calorias||0) * cant;
+                        totalProt += (alim.proteinas||0) * cant;
+                        totalCarb += (alim.carbohidratos||0) * cant;
+                        totalGrasa += (alim.grasas||0) * cant;
+                    }
+                }
+            }
+            const resumen = document.getElementById('resumenNutricional');
+            if (resumen) {
+                resumen.innerHTML = `
+                    🔥 Calorías totales: <strong>${Math.round(totalCal)} kcal</strong> · Por porción: <strong>${Math.round(totalCal/porciones)} kcal</strong><br>
+                    💪 Proteínas: ${Math.round(totalProt)}g · 🍞 Carbohidratos: ${Math.round(totalCarb)}g · 🧈 Grasas: ${Math.round(totalGrasa)}g
+                `;
+            }
+        }
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'recetaPorciones') actualizarResumenNutricional();
+        });
+
+        async function guardarRecetaDesdeModal() {
+            const nombre = document.getElementById('recetaNombre').value;
+            const porciones = parseInt(document.getElementById('recetaPorciones').value);
+            if (!nombre || isNaN(porciones)) { mostrarToast('Completa los campos', 'error'); return; }
+            const selects = document.querySelectorAll('.ingAlimento');
+            const cantidades = document.querySelectorAll('.ingCantidad');
+            const ingredientes = [];
+            let totalCal=0, totalProt=0, totalCarb=0, totalGrasa=0;
+            for (let i=0; i<selects.length; i++) {
+                const id = parseInt(selects[i].value);
+                const cant = parseFloat(cantidades[i].value);
+                if (!isNaN(id) && !isNaN(cant) && cant>0) {
+                    const alim = window.alimentosDisponibles.find(a=>a.id===id);
+                    if (alim) {
+                        ingredientes.push({ alimentoId: alim.id, nombre: alim.nombre, cantidad: cant });
+                        totalCal += (alim.calorias||0) * cant;
+                        totalProt += (alim.proteinas||0) * cant;
+                        totalCarb += (alim.carbohidratos||0) * cant;
+                        totalGrasa += (alim.grasas||0) * cant;
+                    }
+                }
+            }
+            if (ingredientes.length === 0) { mostrarToast('Añade al menos un ingrediente válido', 'error'); return; }
+            const receta = {
+                nombre, porciones, ingredientes, usuario: usuarioActivo,
+                caloriasTotales: totalCal,
+                proteinasTotales: totalProt,
+                carbohidratosTotales: totalCarb,
+                grasasTotales: totalGrasa
+            };
+            await promisify(tx('recetas','readwrite').add(receta));
+            cerrarModalGenerico();
+            cambiarTabNutricion('recetas');
+            mostrarToast('Receta guardada ✅');
+        }
+
+        async function usarReceta(id) {
+            const receta = await promisify(tx('recetas').get(id));
+            if (!receta) return;
+            abrirModalGenerico(`
+                <h3>Usar receta: ${receta.nombre}</h3>
+                <p>Porciones totales: ${receta.porciones}</p>
+                <input class="input" id="usarPorciones" type="number" value="1" placeholder="Porciones a consumir" step="0.1" min="0.1"><br><br>
+                <button class="btn btn-primary btn-block" onclick="confirmarUsoReceta(${id})">Registrar</button>
+            `);
+        }
+        async function confirmarUsoReceta(id) {
+            const porciones = parseFloat(document.getElementById('usarPorciones').value);
+            if (isNaN(porciones) || porciones<=0) return;
+            const receta = await promisify(tx('recetas').get(id));
+            const factor = porciones / receta.porciones;
+            const comida = {
+                fecha: fechaHoy(),
+                usuario: usuarioActivo,
+                recetaId: receta.id,
+                recetaNombre: receta.nombre,
+                alimentoNombre: receta.nombre,
+                cantidadServidas: porciones,
+                calorias: receta.caloriasTotales * factor,
+                proteinas: receta.proteinasTotales * factor,
+                carbohidratos: receta.carbohidratosTotales * factor,
+                grasas: receta.grasasTotales * factor
+            };
+            await promisify(tx('comidas','readwrite').add(comida));
+            cerrarModalGenerico();
+            cambiarTabNutricion('diario');
+            mostrarToast('Receta añadida al día ✅');
+        }
+
+        function mostrarModalPlanificar() {
+            tx('recetas').getAll().then(recetas => {
+                const recetasUsuario = recetas.filter(r => r.usuario === usuarioActivo);
+                let opcionesRecetas = recetasUsuario.map(r=>`<option value="${r.id}">${r.nombre}</option>`).join('');
+                if (opcionesRecetas === '') opcionesRecetas = '<option value="">No tienes recetas aún</option>';
+                abrirModalGenerico(`
+                    <h3>Planificar comida</h3>
+                    <input class="input" id="planFecha" type="date" value="${fechaHoy()}"><br><br>
+                    <input class="input" id="planComida" placeholder="Comida (ej: Desayuno)"><br><br>
+                    <select class="select" id="planRecetaId">
+                        <option value="">Seleccionar receta</option>
+                        ${opcionesRecetas}
+                    </select><br><br>
+                    <input class="input" id="planNota" placeholder="Nota adicional (opcional)"><br><br>
+                    <button class="btn btn-primary btn-block" onclick="guardarPlanDesdeModal()">Guardar</button>
+                `);
+            });
+        }
+        async function guardarPlanDesdeModal() {
+            const fecha = document.getElementById('planFecha').value;
+            const comida = document.getElementById('planComida').value;
+            const recetaId = document.getElementById('planRecetaId').value;
+            const nota = document.getElementById('planNota').value;
+            if (!fecha || !comida) { mostrarToast('Completa fecha y comida', 'error'); return; }
+            let recetaNombre = null;
+            if (recetaId) {
+                const receta = await promisify(tx('recetas').get(parseInt(recetaId)));
+                if (receta) recetaNombre = receta.nombre;
+            }
+            await promisify(tx('planSemanal','readwrite').add({
+                fecha, comida, recetaId: recetaId || null, recetaNombre, descripcion: nota, usuario: usuarioActivo
+            }));
+            cerrarModalGenerico();
+            cambiarTabNutricion('plan');
+            mostrarToast('Plan guardado ✅');
+        }
+        async function eliminarPlan(id) { await promisify(tx('planSemanal','readwrite').delete(id)); cambiarTabNutricion('plan'); }
+
+        // ==================== LISTA DE COMPRA (sin cambios) ====================
+        function iniciarCompra() {
+            cambiarTabCompra('pendientes');
+            document.querySelectorAll('#tabsCompra .tab').forEach(tab => {
+                tab.onclick = () => cambiarTabCompra(tab.dataset.tab);
+            });
+        }
+        async function cambiarTabCompra(tab) {
+            document.querySelectorAll('#tabsCompra .tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`#tabsCompra .tab[data-tab="${tab}"]`).classList.add('active');
+            const cont = document.getElementById('compra-contenido');
+            if (tab === 'pendientes') {
+                const lista = await promisify(tx('listaCompra').getAll());
+                const itemsPendientes = lista.filter(item => item.remaining > 0);
+                cont.innerHTML = `
+                    <button class="btn btn-primary btn-block" onclick="agregarALista()">＋ Añadir producto manual</button>
+                    ${itemsPendientes.length ? itemsPendientes.map(l=>`
+                        <div class="list-item">
+                            <div class="item-info">
+                                <span>${l.remaining} ${l.unidad||''} ${l.nombre} ${l.urgencia ? '⚠️'+l.urgencia : ''}</span>
+                                <small>Presupuestado: $${(l.unitPrice * l.remaining).toFixed(2)}</small>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="comprarParcial(${l.id})">✅ Comprar</button>
+                        </div>`).join('') : '<p>Lista vacía.</p>'}
+                `;
+            } else if (tab === 'presupuesto') {
+                const items = await promisify(tx('presupuestoItems').getAll());
+                const totalPresupuestado = items.reduce((s,i)=>s+i.total,0);
+                cont.innerHTML = `
+                    <div class="card"><h3>Total presupuestado: $${totalPresupuestado.toFixed(2)}</h3></div>
+                    ${items.map(p=>`
+                        <div class="list-item">
+                            <span>${p.categoria}: ${p.nombre} (${p.cantidad} ${p.unidad} x $${p.unitPrice})</span>
+                            <span>$${p.total.toFixed(2)}</span>
+                        </div>`).join('') || '<p>Sin presupuesto.</p>'}
+                `;
+            }
+        }
+        async function agregarALista() {
+            abrirModalGenerico(`
+                <h3>Añadir producto a la lista (no presupuestado)</h3>
+                <input class="input" id="listNombre" placeholder="Producto"><br><br>
+                <input class="input" id="listUnidad" placeholder="Unidad"><br><br>
+                <input class="input" id="listCantidad" type="number" placeholder="Cantidad" step="0.1" value="1"><br><br>
+                <input class="input" id="listPrecioUnitario" type="number" placeholder="Precio unitario (opcional)" step="0.01"><br><br>
+                <button class="btn btn-primary btn-block" onclick="guardarListaDesdeModal()">Añadir</button>
+            `);
+        }
+        async function guardarListaDesdeModal() {
+            const nombre = document.getElementById('listNombre').value;
+            const unidad = document.getElementById('listUnidad').value;
+            const cantidad = parseFloat(document.getElementById('listCantidad').value)||1;
+            const unitPrice = parseFloat(document.getElementById('listPrecioUnitario').value)||0;
+            if (!nombre || !unidad) return;
+            const item = { nombre, unidad, remaining: cantidad, unitPrice, usuario: usuarioActivo };
+            await promisify(tx('listaCompra','readwrite').add(item));
+            cerrarModalGenerico();
+            cambiarTabCompra('pendientes');
+        }
+        async function comprarParcial(id) {
+            const item = await promisify(tx('listaCompra').get(id));
+            if (!item || item.remaining <= 0) return;
+            abrirModalGenerico(`
+                <h3>Comprar "${item.nombre}"</h3>
+                <p>Pendiente: ${item.remaining} ${item.unidad}</p>
+                <input class="input" id="compraCantidad" type="number" placeholder="Cantidad comprada" step="0.1" min="0.1" max="${item.remaining}" value="${item.remaining}"><br><br>
+                <select class="select" id="compraAtribucion">
+                    <option value="angy">Angy</option>
+                    <option value="brian">Brian</option>
+                    <option value="casa">Casa (compartido)</option>
+                </select><br><br>
+                <button class="btn btn-primary btn-block" onclick="confirmarCompraParcial(${id})">Registrar compra</button>
+            `);
+        }
+        async function confirmarCompraParcial(id) {
+            const cantidadComprada = parseFloat(document.getElementById('compraCantidad').value);
+            const atribucion = document.getElementById('compraAtribucion').value;
+            if (isNaN(cantidadComprada) || cantidadComprada <= 0) { mostrarToast('Cantidad inválida', 'error'); return; }
+            const item = await promisify(tx('listaCompra').get(id));
+            if (cantidadComprada > item.remaining) { mostrarToast('No puedes comprar más de lo pendiente', 'error'); return; }
+            const gasto = {
+                nombre: item.nombre,
+                monto: cantidadComprada * item.unitPrice,
+                fecha: fechaHoy(),
+                usuario: usuarioActivo,
+                atribucion,
+                presupuestado: !!item.presupuestoId
+            };
+            await promisify(tx('gastos','readwrite').add(gasto));
+            item.remaining -= cantidadComprada;
+            if (item.remaining <= 0) {
+                await promisify(tx('listaCompra','readwrite').delete(id));
+            } else {
+                await promisify(tx('listaCompra','readwrite').put(item));
+            }
+            cerrarModalGenerico();
+            cambiarTabCompra('pendientes');
+            mostrarToast('Compra registrada ✅');
+        }
+    </script>
+</body>
+</html>
